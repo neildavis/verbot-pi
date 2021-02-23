@@ -1,4 +1,5 @@
 # verbot-pi
+
 A Python program and library to control a Tomy Verbot using a Raspberry Pi
 
 ## Verbot Mechanical Operation
@@ -14,20 +15,24 @@ Verbot is controlled by a single bi-deirectional 3V DC motor and a complex set o
 |||
 
 ### 1. Interrogation mode
-During interrogation mode, Verbot is not performing any movement or other actions. It is the default mode upon powering on. 
+
+During interrogation mode, Verbot is not performing any movement or other actions. It is the default mode upon powering on.
 
 The motor rotating continuously in an anti-clockwise direction drives a drum with 8 cams placed equally around its circumference which in turn activate (and release) one of 8 normally-open switches. These switches correspond to the 8 possible actions that are programmable from the front mounted keypad.
 
 By wiring the switches to complete a circuit their state can be determined by an attached micro-controlller, or in our case a Raspberry Pi through its GPIO interface.
 
 ### 2. Action mode
-Verbot enters action mode when the direction of the motor is reversed. A simple clutch mechanism ensures the drum stops rotating and the last switch selected during interrogation mode stays selected. Now the clutch mechanism starts to rotate a shaft within the drum which connects to various planetary gear sets. The set of gears at the selected location when the drum stopped rotating work to perform the associated action. This action will continue until the motor is again reversed to re-enter interrogation mode. Some actions such as the arms have movement limits enforced by limit switches in series which will break the interrogation circuit, and this prompts the controller to automatically reverse the motor to re-enter interrogation mode. 
+
+Verbot enters action mode when the direction of the motor is reversed. A simple clutch mechanism ensures the drum stops rotating and the last switch selected during interrogation mode stays selected. Now the clutch mechanism starts to rotate a shaft within the drum which connects to various planetary gear sets. The set of gears at the selected location when the drum stopped rotating work to perform the associated action. This action will continue until the motor is again reversed to re-enter interrogation mode. Some actions such as the arms have movement limits enforced by limit switches in series which will break the interrogation circuit, and this prompts the controller to automatically reverse the motor to re-enter interrogation mode.
 
 ### 3. Putting it together
+
 To perform a desired action it's important to allow the drum to rotate during interrogation mode until the corresponding switch has been activated to complete the circuit, before reversing the motor to perform the action. This ensures the correct set of planetary gears connected to the shaft are operational and placed in the correct position to perform the desired action.
 
 ### 4. Switching Key
-The following table lists the 9 coloured wires in the ribbon cable connecting the controller board to the interrogation switch bank contained within the gearbox & motor housing, and their corresponding actions. 
+
+The following table lists the 9 coloured wires in the ribbon cable connecting the controller board to the interrogation switch bank contained within the gearbox & motor housing, and their corresponding actions.
 
 | Colour | Interrogation order | Action / Purpose |
 |--------|---------------------|------------------|
@@ -41,3 +46,36 @@ The following table lists the 9 coloured wires in the ribbon cable connecting th
 | Orange | 7 | Arms Down / Put Down |
 | Green  | 8 | Talk |
 ||||
+
+## GPIO Pin Assignments
+
+| GPIO Pin (BCM) | Physical Pin | Reserved by | Function |
+|----------------|--------------|-------------|----------|
+|  2             |   3          | I2C1 | I2C Data |
+|  3             |   5          | I2C1 | I2C Clock |
+|  4             |   7          | | |
+| 14             |   8          | Voice Hat | UART TX |
+| 15             |  10          | Voice Hat | UART RX |
+| 17             |  11          | On/Off Shim | Power Button |
+| 18             |  12          | Voice Hat | PCM Clock |
+| 27             |  13          | | |
+| 22             |  15          | **Verbot** | SW Stop |
+| 23             |  16          | Voice Hat | ??? |
+| 24             |  18          | **Verbot** | SW Rotate Right |
+| 10             |  19          | **Verbot** | SW Rotate Left |
+|  9             |  21          | **Verbot** | SW Forwards |
+| 25             |  22          | **Verbot** | SW Reverse|
+| 11             |  23          | **Verbot** | SW Pick Up |
+|  8             |  24          | **Verbot** | SW Put Down |
+|  7             |  26          | **Verbot** | SW Talk |
+|  0             |  27          | I2C0 | EEPROM Data |
+|  1             |  28          | I2C0 | EEPROM Clock |
+|  5             |  29          | DRV8835 | Motor 1 Dir |
+|  6             |  31          | DRV8835 | Motor 2 Dir |
+| 12             |  32          | DRV8835 | Motor 1 PWM |
+| 13             |  33          | DRV8835 | Motor 2 PWM |
+| 19             |  35          | Voice Hat | PCM FS |
+| 16             |  36          | | |
+| 26             |  37          | | |
+| 20             |  38          | Voice Hat | PCM In |
+| 21             |  40          | Voice Hat | PCM Out |
