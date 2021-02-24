@@ -111,7 +111,7 @@ class Controller():
         print("Current state is {0}. Motor speed will be set to {1}\n".format(self._current_state, motor_speed))
         await self._motor.setSpeedPercent(motor_speed)
 
-    @apigpio.Debounce(threshold=3000, print_status=False)
+    @apigpio.Debounce(threshold=250, print_status=False)
     def _on_gpio_edge_event(self, gpio, level, tick):
         if level == apigpio.TIMEOUT:
             return # No change, just a watchdog event
