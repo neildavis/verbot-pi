@@ -139,7 +139,7 @@ class Controller():
                 return  # Ignore 'noise' of switch for current state activating (again)
             if action == self._desired_state:
                 # Gear has reached correct position for new desired state
-                print("Falling edge action {0} matches desired state\n".format())
+                print("Falling edge action {0} matches desired state\n".format(action))
                 asyncio.create_task(self._on_reached_desired_state())
             else:
                print("Falling edge ignored on pin {0}\n".format(gpio))
