@@ -19,14 +19,14 @@ class State(Enum):
     TALK            = 8
 
 GPIO_ACTIONS = {
-    22: State.STOP,
-    24: State.ROTATE_RIGHT,
-    10: State.ROTATE_LEFT,
-    9:  State.FORWARDS,
-    25: State.REVERSE,
-    11: State.PICK_UP,
-    8:  State.PUT_DOWN,
-    7:  State.TALK
+    22  : State.STOP,
+    24  : State.ROTATE_RIGHT,
+    10  : State.ROTATE_LEFT,
+    9   : State.FORWARDS,
+    25  : State.REVERSE,
+    11  : State.PICK_UP,
+    8   : State.PUT_DOWN,
+    7   : State.TALK
 }
 
 class Controller():
@@ -59,6 +59,9 @@ class Controller():
         init_coros.append(self._motor.init_io())
         await asyncio.gather(*init_coros)
         print("GPIO pins configured\n")
+
+    async def cleanup(self):
+        await self._the_pi.stop()
  
     @property
     def current_state(self) -> State:
