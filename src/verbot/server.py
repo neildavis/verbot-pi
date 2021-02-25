@@ -27,7 +27,9 @@ class Server:
 
     async def _handle_json_rpc_request(self, request):
         request = await request.text()
-        response = await async_dispatch(request)
+        # Because jsonrpcserver doesnt support instance methods as @json_rpc_method
+        # we need to stash our instance 'self' as a context
+        response = await async_dispatch(request=request, context=self)
         if response.wanted:
             return web.json_response(response.deserialized(), status=response.http_status)
         else:
@@ -36,19 +38,19 @@ class Server:
     async def _on_shutdown(self, app):
         await self._verbot.cleanup()
     
-    @json_rpc_method
-    async def verbot_action(self, action:str):
-        ACTIONS_STATES={
-            "stop"          : State.STOP,
-            "forwards"      : State.FORWARDS,
-            "reverse"       : State.REVERSE,
-            "rotate_left"   : State.ROTATE_LEFT,
-            "rotate_right"  : State.ROTATE_RIGHT,
-            "pick_up"       : State.PICK_UP,
-            "put_down"      : State.PUT_DOWN,
-            "talk"          : State.TALK
-        }
-        new_state = ACTIONS_STATES.get(action)
-        if not new_state == None:
-            self._verbot.desired_state = new_state
+@json_rpc_method
+async def verbot_action(server, action):
+    ACTIONS_STATES={
+        "stop"          : State.STOP,
+        "forwards"      : State.FORWARDS,
+        "reverse"       : State.REVERSE,
+        "rotate_left"   : State.ROTATE_LEFT,
+        "rotate_right"  : State.ROTATE_RIGHT,
+        "pick_up"       : State.PICK_UP,
+        "put_down"      : State.PUT_DOWN,
+        "talk"          : State.TALK
+    }
+    new_state = ACTIONS_STATES.get(action)
+    if not new_state == None:
+        server._verbot.desired_state = new_state
 
