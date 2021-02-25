@@ -2,7 +2,6 @@ from enum import Enum
 import asyncio
 import itertools
 import apigpio
-from itertools import chain
 import verbot.drv_8835_driver as drv8835
 
 

@@ -1,6 +1,20 @@
 # verbot-pi
 
-A Python program and library to control a Tomy Verbot using a Raspberry Pi
+A Python program and library to control a Tomy Verbot using a Raspberry Pi. Requires Python 3.7+
+
+## Required Libraries
+
+```bash
+pip install aiohttp jsonrpcserver jsonrpcclient
+```
+
+You will also need my fork of [apigpio](https://github.com/neildavis/apigpio.git) (not yet on PyPI)
+
+```bash
+git clone https://github.com/neildavis/apigpio.git
+cd apigpio
+python -m pip install .
+```
 
 ## Verbot Mechanical Operation
 

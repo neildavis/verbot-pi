@@ -1,4 +1,3 @@
-import asyncio
 from verbot.server import Server as VerbotServer
 
 def main():
