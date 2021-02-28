@@ -3,6 +3,7 @@ import asyncio
 import itertools
 import apigpio
 import verbot.drv_8835_driver as drv8835
+import verbot.utils as utils
 
 
 class State(Enum):
@@ -23,8 +24,8 @@ GPIO_ACTIONS = {
     10  : State.ROTATE_LEFT,
     9   : State.FORWARDS,
     25  : State.REVERSE,
-    11  : State.PICK_UP,
-    8   : State.PUT_DOWN,
+    11  : State.PUT_DOWN,
+    8   : State.PICK_UP,
     7   : State.TALK
 }
 
@@ -60,6 +61,7 @@ class Controller():
         print("GPIO pins configured\n")
 
     async def cleanup(self):
+        await self._motor.setSpeedPercent(0)
         await self._the_pi.stop()
  
     @property
@@ -105,15 +107,15 @@ class Controller():
         # ... and wait for falling edge callbacks in self._on_gpio_edge_event
 
     async def _set_motor_speed_for_current_state(self):
-        motor_speed = 100
+        motor_speed = 0 # No actions for now until we debug interrogate debounce
         if self._current_state == State.INTERROGATE:
-            motor_speed = -100
+            motor_speed = 100
         elif self._current_state == State.STOP:
             motor_speed = 0
         print("Current state is {0}. Motor speed will be set to {1}\n".format(self._current_state, motor_speed))
         await self._motor.setSpeedPercent(motor_speed)
 
-    @apigpio.Debounce(threshold=250, print_status=False)
+    @utils.Debounce(threshold=10, print_status=False)
     def _on_gpio_edge_event(self, gpio, level, tick):
         if level == apigpio.TIMEOUT:
             return # No change, just a watchdog event
@@ -127,7 +129,7 @@ class Controller():
             However in the case of PICK_UP/PUT_DOWN they may occur due to the limit switches activating
             In these cases we must stop/reverse the motor to prevent arms trying to rise/fall to far
             '''
-            if (action == State.PICK_UP or action == State.PUT_DOWN) and action == self._current_state:
+            if action == self._current_state:
                 print("Rising edge for limit switch in state {0}\n".format(self._current_state))
                 self.desired_state = State.STOP
             else:

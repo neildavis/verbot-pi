@@ -56,8 +56,8 @@ The following table lists the 9 coloured wires in the ribbon cable connecting th
 | Yellow | 3 | Rotate Left |
 | Grey   | 4 | Move Forward |
 | Blue   | 5 | Move Backwards |
-| Brown  | 6 | Arms Up / Pick Up |
-| Orange | 7 | Arms Down / Put Down |
+| Brown  | 6 | Arms Down / Put Down |
+| Orange | 7 | Arms Up / Pick Up |
 | Green  | 8 | Talk |
 ||||
 
@@ -79,8 +79,8 @@ The following table lists the 9 coloured wires in the ribbon cable connecting th
 | 10             |  19          | **Verbot** | SW Rotate Left |
 |  9             |  21          | **Verbot** | SW Forwards |
 | 25             |  22          | **Verbot** | SW Reverse|
-| 11             |  23          | **Verbot** | SW Pick Up |
-|  8             |  24          | **Verbot** | SW Put Down |
+| 11             |  23          | **Verbot** | SW Put Down |
+|  8             |  24          | **Verbot** | SW Pick Up |
 |  7             |  26          | **Verbot** | SW Talk |
 |  0             |  27          | I2C0 | EEPROM Data |
 |  1             |  28          | I2C0 | EEPROM Clock |

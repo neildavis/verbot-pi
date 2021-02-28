@@ -22,8 +22,11 @@ class Server:
         loop.run_until_complete(self._verbot.init_io())
         # Set a signal handler to get a chance to shutdown gracefully
         self._app.on_shutdown.append(self._on_shutdown)
-        web.run_app(self._app, host=self._bind_addr, port=self._listen_port)
-        # web.run_app() runs the event loop indefinitely
+        try:
+            web.run_app(self._app, host=self._bind_addr, port=self._listen_port)
+            # web.run_app() runs the event loop indefinitely
+        except KeyboardInterrupt:
+            self._verbot.cleanup()
 
     async def _handle_json_rpc_request(self, request):
         request = await request.text()

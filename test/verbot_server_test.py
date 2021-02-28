@@ -1,5 +1,7 @@
 from jsonrpcclient import request
 
+HOST="127.0.0.1:8080"
+
 VALID_ACTIONS=[
     "stop",
     "forwards",
@@ -18,7 +20,7 @@ while True:
         if not cmd in VALID_ACTIONS:
             print("{0} is not a valid command. Valid commands are {1}".format(cmd, VALID_ACTIONS))
             continue
-        response = request("http://127.0.0.1:8080", "verbot_action", action=cmd)
+        response = request("http://{0}".format(HOST), "verbot_action", action=cmd)
     except KeyboardInterrupt:
         print("\nGoodbye!\n")
         break
