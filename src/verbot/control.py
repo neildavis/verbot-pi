@@ -138,7 +138,8 @@ class Controller():
             print("Connecting asyncio pipe reader")
             pipe_transport, _ = await loop.connect_read_pipe(protocol_factory, pipe)
             print("Read pipe connected - Setting motor speed")
-            while True:
+            state_changed = False
+            while not state_changed:
                 #print("Reading 12 bytes from notify pipe...")
                 pipe_data = await pipe_stream_reader.read(12)
                 #print("Got {0} bytes from notify pipe: {1}".format(len(pipe_data), pipe_data))
@@ -163,7 +164,6 @@ class Controller():
                     continue # not interested in these events
                 gpio_changed_bits = level ^ self._last_gpio_bits # a '1' where the state has changed (NOT the new level)
                 # Find all GPIOs we're interested in that have changed
-                state_changed = False
                 msg = ""
                 for gpio in GPIO_ACTIONS.keys():
                     gpio_mask = (1 << gpio)
@@ -171,8 +171,9 @@ class Controller():
                         old_level = (self._last_gpio_bits & gpio_mask) >> gpio
                         new_level = (level & gpio_mask) >> gpio
                         msg += "GPIO #{0} : {1} -> {2}  ".format(gpio, old_level, new_level)
-                        #ignored = self._on_gpio_edge_event(gpio, new_level, tick)
-                        #state_changed = state_changed or not ignored
+                        ignored = self._on_gpio_edge_event(gpio, new_level, tick)
+                        state_changed = not ignored
+                        break
                 print("seqno={0} flags={1} tick={2} level={3} ... {4}".format(seqno, flags, tick, level, msg))
                 self._last_gpio_bits = level
                 if state_changed:
@@ -181,7 +182,7 @@ class Controller():
 
 
     async def _set_motor_speed_for_current_state(self):
-        motor_speed = 0 # No actions for now until we debug interrogate debounce
+        motor_speed = -100
         if self._current_state == State.INTERROGATE:
             motor_speed = 100
         elif self._current_state == State.STOP:
