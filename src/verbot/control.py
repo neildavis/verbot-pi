@@ -167,8 +167,8 @@ class Controller():
                 for gpio in GPIO_ACTIONS.keys():
                     gpio_mask = (1 << gpio)
                     if gpio_changed_bits & gpio_mask:
-                        old_level = self._last_gpio_bits & gpio_mask
-                        new_level = level & gpio_mask
+                        old_level = (self._last_gpio_bits & gpio_mask) >> gpio
+                        new_level = (level & gpio_mask) >> gpio
                         print("Notify: GPIO pin #{0} changed. {1} -> {2}".format(gpio, old_level, new_level))
                         #ignored = self._on_gpio_edge_event(gpio, new_level, tick)
                         #state_changed = state_changed or not ignored
