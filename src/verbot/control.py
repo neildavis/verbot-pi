@@ -52,7 +52,8 @@ class Controller():
             (
                 self._the_pi.set_mode(pin, apigpio.INPUT),
                 self._the_pi.set_pull_up_down(pin, apigpio.PUD_UP),
-                self._the_pi.add_callback(pin, apigpio.EITHER_EDGE, self._on_gpio_edge_event)
+                self._the_pi.add_callback(pin, apigpio.EITHER_EDGE, self._on_gpio_edge_event),
+                self._the_pi.set_glitch_filter(pin, 25000)
             ) for pin in GPIO_ACTIONS.keys()
         ))
         # Initialize the motor driver GPIO output pins
