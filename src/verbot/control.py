@@ -138,9 +138,9 @@ class Controller():
             pipe_transport, _ = await loop.connect_read_pipe(protocol_factory, pipe)
             print("Read pipe connected - Setting motor speed")
             while True:
-                print("Reading 12 bytes from notify pipe...")
+                #print("Reading 12 bytes from notify pipe...")
                 pipe_data = await pipe_stream_reader.read(12)
-                print("Got {0} bytes from notify pipe: {1}".format(len(pipe_data), pipe_data))
+                #print("Got {0} bytes from notify pipe: {1}".format(len(pipe_data), pipe_data))
                 '''
                 Format is:
                 H seqno
