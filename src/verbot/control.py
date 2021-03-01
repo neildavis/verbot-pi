@@ -20,14 +20,14 @@ class State(Enum):
     TALK            = 8
 
 GPIO_ACTIONS = {
-    22  : State.STOP,
-    24  : State.ROTATE_RIGHT,
-    10  : State.ROTATE_LEFT,
-    9   : State.FORWARDS,
-    25  : State.REVERSE,
-    11  : State.PUT_DOWN,
-    8   : State.PICK_UP,
-    7   : State.TALK
+    22  : State.STOP,           # Purple
+    24  : State.ROTATE_RIGHT,   # Red
+    10  : State.ROTATE_LEFT,    # Yellow
+    9   : State.FORWARDS,       # Grey
+    25  : State.REVERSE,        # Blue
+    11  : State.PUT_DOWN,       # Brown
+    8   : State.PICK_UP,        # Orange
+    7   : State.TALK            # Blue
 }
 
 GPIO_BITS = 0
@@ -57,7 +57,7 @@ class Controller():
             (
                 self._the_pi.set_mode(pin, apigpio.INPUT),
                 self._the_pi.set_pull_up_down(pin, apigpio.PUD_UP),
-                self._the_pi.set_glitch_filter(pin, 10)
+                self._the_pi.set_glitch_filter(pin, 25000)
                 #self._the_pi.add_callback(pin, apigpio.EITHER_EDGE, self._on_gpio_edge_callback)
             ) for pin in GPIO_ACTIONS.keys()
         ))
