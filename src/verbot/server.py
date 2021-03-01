@@ -25,7 +25,7 @@ class Server:
         try:
             web.run_app(self._app, host=self._bind_addr, port=self._listen_port)
             # web.run_app() runs the event loop indefinitely
-        except KeyboardInterrupt:
+        except:
             self._verbot.cleanup()
 
     async def _handle_json_rpc_request(self, request):

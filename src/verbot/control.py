@@ -156,7 +156,7 @@ class Controller():
                 tick: the number of microseconds since system boot. It wraps around after 1h12m.
                 level: indicates the level of each GPIO. If bit 1<<x is set then GPIO x is high.
                 '''
-                seqno, flags, tick, level = struct.unpack("!HHII", pipe_data)
+                seqno, flags, tick, level = struct.unpack("HHII", pipe_data)
                 print("seqno={0} flags={1} tick={2} level={3}".format(seqno, flags, tick, level))
                 if flags & apigpio.NTFY_FLAGS_ALIVE or flags & apigpio.NTFY_FLAGS_WDOG or flags & apigpio.NTFY_FLAGS_EVENT:
                     print("Pipe notification ignored due to flags")
