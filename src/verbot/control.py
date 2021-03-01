@@ -157,21 +157,22 @@ class Controller():
                 level: indicates the level of each GPIO. If bit 1<<x is set then GPIO x is high.
                 '''
                 seqno, flags, tick, level = struct.unpack("HHII", pipe_data)
-                print("seqno={0} flags={1} tick={2} level={3}".format(seqno, flags, tick, level))
                 if flags & apigpio.NTFY_FLAGS_ALIVE or flags & apigpio.NTFY_FLAGS_WDOG or flags & apigpio.NTFY_FLAGS_EVENT:
                     print("Pipe notification ignored due to flags")
                     continue # not interested in these events
                 gpio_changed_bits = level ^ self._last_gpio_bits # a '1' where the state has changed (NOT the new level)
                 # Find all GPIOs we're interested in that have changed
                 state_changed = False
+                msg = ""
                 for gpio in GPIO_ACTIONS.keys():
                     gpio_mask = (1 << gpio)
                     if gpio_changed_bits & gpio_mask:
                         old_level = (self._last_gpio_bits & gpio_mask) >> gpio
                         new_level = (level & gpio_mask) >> gpio
-                        print("Notify: GPIO pin #{0} changed. {1} -> {2}".format(gpio, old_level, new_level))
+                        msg += "GPIO #{0} : {1} -> {2}  ".format(gpio, old_level, new_level)
                         #ignored = self._on_gpio_edge_event(gpio, new_level, tick)
                         #state_changed = state_changed or not ignored
+                print("seqno={0} flags={1} tick={2} level={3} ... {4}".format(seqno, flags, tick, level, msg))
                 self._last_gpio_bits = level
                 if state_changed:
                     break
