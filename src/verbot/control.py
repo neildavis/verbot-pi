@@ -188,7 +188,7 @@ class Controller():
         elif self._current_state == State.STOP:
             motor_speed = 0
         print("Current state is {0}. Motor speed will be set to {1}".format(self._current_state, motor_speed))
-        await self._motor.setSpeedPercent(motor_speed)
+        self._motor.setSpeedPercent(motor_speed)
 
     @utils.Debounce(threshold=10, print_status=False)
     def _on_gpio_edge_callback(self, gpio, level, tick):
