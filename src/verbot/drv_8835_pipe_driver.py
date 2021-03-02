@@ -63,13 +63,13 @@ class Motor(object):
             # I p3 4
             ## extension ##
             # I PWMdutycycle
-            pwm_data = "hp {0} {1} {2}".format(MOTOR_PWM_PIN, PWM_FREQUENCY, speed).encode("latin-1")
+            pwm_data = "hp {0} {1} {2}\n".format(MOTOR_PWM_PIN, PWM_FREQUENCY, speed).encode("latin-1")
             transport.write(pwm_data)
 
             # Write : pigpio message format
             # I p1 gpio
             # I p2 level
-            dir_data = "w {0} {1}".format(MOTOR_DIR_PIN, dir).encode("latin-1")
+            dir_data = "w {0} {1}\n".format(MOTOR_DIR_PIN, dir).encode("latin-1")
             transport.write(dir_data)
 
             # Flush
