@@ -33,7 +33,7 @@ class Motor(object):
             print("Connecting asyncio pipe writer")
             self._pipe_transport, protocol = await loop.connect_write_pipe(asyncio.Protocol, self._pig_pipe_in)
             print("Write pipe connected")
-            self._pipe_stream_writer = asyncio.StreamWriter(self._pipe_transport, protocol)
+            self._pipe_stream_writer = asyncio.StreamWriter(self._pipe_transport, protocol, None, loop)
         except Exception as e:
             print("*ERROR* opening pigpiod input pipe {0}: {1}".format(PIGPIOD_PIPE_IN, e))
 
