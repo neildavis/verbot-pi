@@ -64,19 +64,20 @@ class Motor(object):
         transport, _ = await loop.connect_write_pipe(asyncio.Protocol, self._pig_pipe_in)
         print("Write pipe connected.")
 
-        with transport as pipe_write_transport:
-            # hardware_PWM : pigpio message format
-            # I p1 gpio
-            # I p2 PWMfreq
-            # I p3 4
-            ## extension ##
-            # I PWMdutycycle
-            pwm_data = struct.pack('IIIII', _PI_CMD_HP, MOTOR_PWM_PIN, PWM_FREQUENCY, 4, speed)
-            pipe_write_transport.write(pwm_data)
-    
-            # Write : pigpio message format
-            # I p1 gpio
-            # I p2 level
-            dir_data = struct.pack('IIII', _PI_CMD_WRITE, MOTOR_DIR_PIN, dir, 0)
-            pipe_write_transport.write(dir_data)
-        # transport is close()'ed automatically and flushes buffer
+        # hardware_PWM : pigpio message format
+        # I p1 gpio
+        # I p2 PWMfreq
+        # I p3 4
+        ## extension ##
+        # I PWMdutycycle
+        pwm_data = struct.pack('IIIII', _PI_CMD_HP, MOTOR_PWM_PIN, PWM_FREQUENCY, 4, speed)
+        transport.write(pwm_data)
+
+        # Write : pigpio message format
+        # I p1 gpio
+        # I p2 level
+        dir_data = struct.pack('IIII', _PI_CMD_WRITE, MOTOR_DIR_PIN, dir, 0)
+        transport.write(dir_data)
+
+        # Flush
+        transport.close()
