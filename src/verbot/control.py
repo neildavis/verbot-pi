@@ -52,7 +52,7 @@ class Controller():
   
         print("GPIO pins configured")
         # We need to stash the event loop for scheduling from the RPi.GPIO threaded callback
-        self._loop = asyncio.get_running_loop()
+        self._loop = asyncio.get_event_loop()
 
     def cleanup(self):
         GPIO.cleanup()
