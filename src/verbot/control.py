@@ -137,7 +137,7 @@ class Controller():
                 return asyncio.StreamReaderProtocol(pipe_stream_reader)
             print("Connecting asyncio pipe reader")
             pipe_transport, _ = await loop.connect_read_pipe(protocol_factory, pipe)
-            print("Read pipe connected - Setting motor speed")
+            print("Read pipe connected")
             state_changed = False
             while not state_changed:
                 #print("Reading 12 bytes from notify pipe...")
@@ -188,7 +188,7 @@ class Controller():
         elif self._current_state == State.STOP:
             motor_speed = 0
         print("Current state is {0}. Motor speed will be set to {1}".format(self._current_state, motor_speed))
-        self._motor.setSpeedPercent(motor_speed)
+        await self._motor.setSpeedPercent(motor_speed)
 
     @utils.Debounce(threshold=10, print_status=False)
     def _on_gpio_edge_callback(self, gpio, level, tick):
