@@ -16,9 +16,6 @@ PIGPIOD_PIPE_IN = "/dev/pigpio"
 PIGPIOD_PIPE_OUT = "/dev/pigout"
 PIGPIOD_PIPE_ERR = "/dev/pigerr"
 
-_PI_CMD_WRITE = 4
-_PI_CMD_HP = 86
-
 class Motor(object):
 
     def __init__(self, *args, **kwargs):
@@ -66,13 +63,13 @@ class Motor(object):
             # I p3 4
             ## extension ##
             # I PWMdutycycle
-            pwm_data = struct.pack('IIIII', _PI_CMD_HP, MOTOR_PWM_PIN, PWM_FREQUENCY, 4, speed)
+            pwm_data = "hp {0} {1} {2}".format(MOTOR_PWM_PIN, PWM_FREQUENCY, speed).encode("latin-1")
             transport.write(pwm_data)
 
             # Write : pigpio message format
             # I p1 gpio
             # I p2 level
-            dir_data = struct.pack('IIII', _PI_CMD_WRITE, MOTOR_DIR_PIN, dir, 0)
+            dir_data = "w {0} {1}".format(MOTOR_DIR_PIN, dir).encode("latin-1")
             transport.write(dir_data)
 
             # Flush
