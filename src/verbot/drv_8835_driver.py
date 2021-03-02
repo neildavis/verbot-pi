@@ -21,6 +21,9 @@ class Motor(object):
         # Set initial speed to 0 (stopped) using hardware PWM
         await self._setRawSpeedAndDir(0, 0)
 
+    async def cleanup(self):
+        await self._setRawSpeedAndDir(0, 0)
+
     async def setSpeed(self, speed):
         dir_value = 0
         if speed < 0:

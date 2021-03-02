@@ -3,7 +3,7 @@ import asyncio
 import itertools
 import struct
 import apigpio
-import verbot.drv_8835_driver as drv8835
+import verbot.drv_8835_pipe_driver as drv8835
 import verbot.utils as utils
 
 
@@ -75,7 +75,7 @@ class Controller():
         self._last_gpio_bits = GPIO_BITS # all are pulled high to begin
 
     async def cleanup(self):
-        await self._motor.setSpeedPercent(0)
+        await self._motor.cleanup()
         await self._the_pi.notify_close(self._pipe_handle)
         await self._the_pi.stop()
   
