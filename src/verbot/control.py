@@ -65,7 +65,7 @@ class Controller():
         init_coros.append(self._motor.init_io())
         # Wait for pigpiod to initialize everything and create the notify pipe
         await asyncio.gather(*init_coros)
-        print("GPIO pins configured - Opening ntify pipe")
+        print("GPIO pins configured - Opening notify pipe")
         # Open pipe notifications
         self._pipe_handle = await self._the_pi.notify_open()
         if self._pipe_handle == apigpio.PI_NO_HANDLE:

@@ -27,12 +27,13 @@ class Motor(object):
     async def init_io(self):
         try:
             print("Opening pigpiod input pipe for writing on {0}".format(PIGPIOD_PIPE_IN))
-            self._pig_pipe_in = open(PIGPIOD_PIPE_IN, mode='w+b')
+            self._pig_pipe_in = open(PIGPIOD_PIPE_IN, mode='wb')
             print("Pipe opened")
             loop = asyncio.get_event_loop()
             print("Connecting asyncio pipe writer")
-            self._pipe_transport, _ = await loop.connect_write_pipe(asyncio.Protocol, self._pig_pipe_in)
+            self._pipe_transport, protocol = await loop.connect_write_pipe(asyncio.Protocol, self._pig_pipe_in)
             print("Write pipe connected")
+            self._pipe_stream_writer = asyncio.StreamWriter(self._pipe_transport, protocol)
         except Exception as e:
             print("*ERROR* opening pigpiod input pipe {0}: {1}".format(PIGPIOD_PIPE_IN, e))
 
@@ -70,11 +71,11 @@ class Motor(object):
         ## extension ##
         # I PWMdutycycle
         pwm_data = struct.pack('IIIII', _PI_CMD_HP, MOTOR_PWM_PIN, PWM_FREQUENCY, 4, speed)
-        await self._pipe_transport.write(pwm_data)
+        await self._pipe_stream_writer.write(pwm_data)
  
         # Write : pigpio message format
         # I p1 gpio
         # I p2 level
         dir_data = struct.pack('IIII', _PI_CMD_WRITE, MOTOR_DIR_PIN, dir, 0)
-        await self._pipe_transport.write(dir_data)
+        await self._pipe_stream_writer.write(dir_data)
  
