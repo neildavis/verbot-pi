@@ -5,12 +5,12 @@ from verbot.control import State, Controller as Verbot
 
 class Server:
 
-    def __init__(self, bind_addr="127.0.0.1", listen_port=8080, pigpiod_addr="127.0.0.1", pigpiod_port=8888):
+    def __init__(self, bind_addr="127.0.0.1", listen_port=8080):
         self._app = web.Application()
         self._bind_addr = bind_addr
         self._listen_port = listen_port
         self._app.router.add_post("/", self._handle_json_rpc_request)
-        self._verbot = Verbot(host=pigpiod_addr, port=pigpiod_port)
+        self._verbot = Verbot()
 
     def start_server(self):
         """
@@ -18,8 +18,7 @@ class Server:
         It will run the asyncio event loop and not return until the loop is stopped
         """
         # wait whilst we initialize verbot controller
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._verbot.init_io())
+        self._verbot.init_io()
         # Set a signal handler to get a chance to shutdown gracefully
         self._app.on_shutdown.append(self._on_shutdown)
         try:
@@ -39,7 +38,7 @@ class Server:
             return web.Response(status=400) # Bad Request
 
     async def _on_shutdown(self, app):
-        await self._verbot.cleanup()
+        self._verbot.cleanup()
     
 @json_rpc_method
 async def verbot_action(server, action):
