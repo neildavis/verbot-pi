@@ -1,6 +1,7 @@
 from enum import Enum
 import asyncio
-import verbot.drv_8835_driver_rpio as drv8835
+import RPi.GPIO as GPIO
+import verbot.drv_8835_driver_rpigpio as drv8835
 
 
 class State(Enum):
@@ -44,17 +45,18 @@ class Controller():
         self._motor.init_io()
 
         # Set all GPIO pins for actions to input and pull up, and register callbacks for edge events
+        GPIO.setmode(GPIO.BCM)
         for gpio in GPIO_ACTIONS.keys():
-            RPIO.add_interrupt_callback(gpio, self._on_gpio_interrupt, edge='both', pull_up_down=RPIO.PUD_UP, threaded_callback=False, debounce_timeout_ms=GPIO_INTERRUPT_DEBOUNCE_MS)
-
-        # Start interrupt callbacks on their own thread
-        RPIO.wait_for_interrupts(threaded=True)
+            GPIO.setup(gpio, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+            GPIO.add_event_detect(gpio, GPIO.RISING, callback=self._on_gpio_rising, bouncetime=25)
+            GPIO.add_event_detect(gpio, GPIO.FALLING, callback=self._on_gpio_falling, bouncetime=25)
+ 
         print("GPIO pins configured")
-        # We need to stash the event loop for scheduling from the RPIO threaded callback
+        # We need to stash the event loop for scheduling from the RPi.GPIO threaded callback
         self._loop = asyncio.get_running_loop()
 
     def cleanup(self):
-        RPIO.stop_waiting_for_interrupts()
+        GPIO.cleanup()
         self._motor.setSpeedPercent(0)
  
     @property
@@ -108,11 +110,17 @@ class Controller():
         print("Current state is {0}. Motor speed will be set to {1}".format(self._current_state, motor_speed))
         self._motor.setSpeedPercent(motor_speed)
 
-    def _on_gpio_interrupt(self, gpio, level):
+    def _on_gpio_rising(self, gpio):
         """
-        THREADED callback from RPIO on GPIO edge event
+        THREADED callback from RPi.GPIO on GPIO edge event
         """
-        asyncio.run_coroutine_threadsafe(self._on_gpio_edge_event(gpio, level), self._loop)
+        asyncio.run_coroutine_threadsafe(self._on_gpio_edge_event(gpio, 1), self._loop)
+
+    def _on_gpio_falling(self, gpio):
+        """
+        THREADED callback from RPi.GPIO on GPIO edge event
+        """
+        asyncio.run_coroutine_threadsafe(self._on_gpio_edge_event(gpio, 0), self._loop)
 
     async def _on_gpio_edge_event(self, gpio, level):
         action = GPIO_ACTIONS[gpio]
