@@ -25,17 +25,10 @@ class Motor(object):
         pass
 
     async def init_io(self):
-        try:
-            print("Opening pigpiod input pipe for writing on {0}".format(PIGPIOD_PIPE_IN))
-            self._pig_pipe_in = open(PIGPIOD_PIPE_IN, mode='wb')
-            print("Pipe opened")
-        except Exception as e:
-            print("*ERROR* opening pigpiod input pipe {0}: {1}".format(PIGPIOD_PIPE_IN, e))
+        pass
 
     async def cleanup(self):
         self._setRawSpeedAndDir(0, 0)
-        # Close pipes
-        self._pig_pipe_in.close()
 
     async def setSpeed(self, speed):
         dir_value = 0
@@ -59,25 +52,28 @@ class Motor(object):
 
     async def _setRawSpeedAndDir(self, speed, dir):
 
-        loop = asyncio.get_event_loop()
-        print("Connecting asyncio pipe writer")
-        transport, _ = await loop.connect_write_pipe(asyncio.Protocol, self._pig_pipe_in)
-        print("Write pipe connected.")
+        print("Opening pigpiod input pipe for writing on {0}".format(PIGPIOD_PIPE_IN))
+        with open(PIGPIOD_PIPE_IN, mode='wb') as pipe: 
+            print("Pipe opened")
+            loop = asyncio.get_event_loop()
+            print("Connecting asyncio pipe writer")
+            transport, _ = await loop.connect_write_pipe(asyncio.Protocol, pipe)
+            print("Write pipe connected.")
 
-        # hardware_PWM : pigpio message format
-        # I p1 gpio
-        # I p2 PWMfreq
-        # I p3 4
-        ## extension ##
-        # I PWMdutycycle
-        pwm_data = struct.pack('IIIII', _PI_CMD_HP, MOTOR_PWM_PIN, PWM_FREQUENCY, 4, speed)
-        transport.write(pwm_data)
+            # hardware_PWM : pigpio message format
+            # I p1 gpio
+            # I p2 PWMfreq
+            # I p3 4
+            ## extension ##
+            # I PWMdutycycle
+            pwm_data = struct.pack('IIIII', _PI_CMD_HP, MOTOR_PWM_PIN, PWM_FREQUENCY, 4, speed)
+            transport.write(pwm_data)
 
-        # Write : pigpio message format
-        # I p1 gpio
-        # I p2 level
-        dir_data = struct.pack('IIII', _PI_CMD_WRITE, MOTOR_DIR_PIN, dir, 0)
-        transport.write(dir_data)
+            # Write : pigpio message format
+            # I p1 gpio
+            # I p2 level
+            dir_data = struct.pack('IIII', _PI_CMD_WRITE, MOTOR_DIR_PIN, dir, 0)
+            transport.write(dir_data)
 
-        # Flush
-        transport.close()
+            # Flush
+            transport.close()
