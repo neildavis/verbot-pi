@@ -21,6 +21,9 @@ _PI_CMD_HP = 86
 
 class Motor(object):
 
+    def __init__(self, *args, **kwargs):
+        pass
+
     async def init_io(self):
         try:
             print("Opening pigpiod input pipe for writing on {0}".format(PIGPIOD_PIPE_IN))
