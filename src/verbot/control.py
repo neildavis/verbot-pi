@@ -48,9 +48,8 @@ class Controller():
         GPIO.setmode(GPIO.BCM)
         for gpio in GPIO_ACTIONS.keys():
             GPIO.setup(gpio, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-            GPIO.add_event_detect(gpio, GPIO.RISING, callback=self._on_gpio_rising, bouncetime=25)
-            GPIO.add_event_detect(gpio, GPIO.FALLING, callback=self._on_gpio_falling, bouncetime=25)
- 
+            GPIO.add_event_detect(gpio, GPIO.BOTH, callback=self._on_gpio_event_detect, bouncetime=25)
+  
         print("GPIO pins configured")
         # We need to stash the event loop for scheduling from the RPi.GPIO threaded callback
         self._loop = asyncio.get_running_loop()
@@ -110,17 +109,12 @@ class Controller():
         print("Current state is {0}. Motor speed will be set to {1}".format(self._current_state, motor_speed))
         self._motor.setSpeedPercent(motor_speed)
 
-    def _on_gpio_rising(self, gpio):
+    def _on_gpio_event_detect(self, gpio):
         """
         THREADED callback from RPi.GPIO on GPIO edge event
         """
-        asyncio.run_coroutine_threadsafe(self._on_gpio_edge_event(gpio, 1), self._loop)
-
-    def _on_gpio_falling(self, gpio):
-        """
-        THREADED callback from RPi.GPIO on GPIO edge event
-        """
-        asyncio.run_coroutine_threadsafe(self._on_gpio_edge_event(gpio, 0), self._loop)
+        level = GPIO.input(gpio)
+        asyncio.run_coroutine_threadsafe(self._on_gpio_edge_event(gpio, level), self._loop)
 
     async def _on_gpio_edge_event(self, gpio, level):
         action = GPIO_ACTIONS[gpio]
