@@ -1,6 +1,5 @@
 import asyncio
 import struct
-from apigpio import _PI_CMD_WRITE, _PI_CMD_HP
 
 
 # Motor speeds for this module are specified as numbers
@@ -16,6 +15,9 @@ PWM_FREQUENCY=250000 # 250 KHz is the max PWM supported by the 8835!
 PIGPIOD_PIPE_IN = "/dev/pigpio"
 PIGPIOD_PIPE_OUT = "/dev/pigout"
 PIGPIOD_PIPE_ERR = "/dev/pigerr"
+
+_PI_CMD_WRITE = 4
+_PI_CMD_HP = 86
 
 class Motor(object):
 
