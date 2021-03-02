@@ -69,7 +69,7 @@ class Motor(object):
         # I p3 4
         ## extension ##
         # I PWMdutycycle
-        pwm_data = struct.pack('IIII', _PI_CMD_HP, MOTOR_PWM_PIN, PWM_FREQUENCY, 4, speed)
+        pwm_data = struct.pack('IIIII', _PI_CMD_HP, MOTOR_PWM_PIN, PWM_FREQUENCY, 4, speed)
         await self._pipe_transport.write(pwm_data)
  
         # Write : pigpio message format
