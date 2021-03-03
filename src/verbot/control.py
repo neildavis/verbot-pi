@@ -4,8 +4,6 @@ import itertools
 import struct
 import apigpio
 import verbot.drv_8835_pipe_driver as drv8835
-import verbot.utils as utils
-
 
 class State(Enum):
     """Valid states of Controller instances"""
@@ -188,7 +186,6 @@ class Controller():
         print("Current state is {0}. Motor speed will be set to {1}".format(self._current_state, motor_speed))
         self._motor.setSpeedPercent(motor_speed)
 
-    @utils.Debounce(threshold=10, print_status=False)
     def _on_gpio_edge_callback(self, gpio, level, tick):
         if level == apigpio.TIMEOUT:
             return # No change, just a watchdog event

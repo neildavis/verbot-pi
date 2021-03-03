@@ -43,11 +43,9 @@ class Motor(object):
         await self.setSpeed(speed)
 
     async def _setRawSpeedAndDir(self, speed, dir):
-        await asyncio.gather(
-            # set motor speed via PWM
-            self.the_pi.hardware_PWM(MOTOR_PWM_PIN, PWM_FREQUENCY, speed),
-            # set motor direction
-            self.the_pi.write(MOTOR_DIR_PIN, dir)
-        )
+        # set motor direction
+        await self.the_pi.write(MOTOR_DIR_PIN, dir),
+        # set motor speed via PWM
+        await self.the_pi.hardware_PWM(MOTOR_PWM_PIN, PWM_FREQUENCY, speed)
         
  

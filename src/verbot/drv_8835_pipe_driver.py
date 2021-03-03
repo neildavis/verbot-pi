@@ -41,8 +41,9 @@ class Motor(object):
 
         print("Opening pigpiod input pipe for writing on {0}".format(PIGPIOD_PIPE_IN))
         with open(PIGPIOD_PIPE_IN, mode='wb') as pipe: 
-            pwm_data = "hp {0} {1} {2}\n".format(MOTOR_PWM_PIN, PWM_FREQUENCY, speed).encode("latin-1")
-            pipe.write(pwm_data)
-
+            # Set direction first
             dir_data = "w {0} {1}\n".format(MOTOR_DIR_PIN, dir).encode("latin-1")
             pipe.write(dir_data)
+            # Set speed via hardware PWM
+            pwm_data = "hp {0} {1} {2}\n".format(MOTOR_PWM_PIN, PWM_FREQUENCY, speed).encode("latin-1")
+            pipe.write(pwm_data)
