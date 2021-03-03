@@ -43,7 +43,7 @@ class Controller():
         """c'tor"""
         self._address = (host, port)
         self._the_pi = apigpio.Pi()
-        self._motor = drv8835.Motor(self._the_pi)
+        self._motor = drv8835.Motor()
         self._current_state = State.STOP
         self._desired_state = State.STOP
 
@@ -61,8 +61,6 @@ class Controller():
                 #self._the_pi.add_callback(pin, apigpio.EITHER_EDGE, self._on_gpio_edge_callback)
             ) for pin in GPIO_ACTIONS.keys()
         ))
-        # Initialize the motor driver GPIO output pins
-        init_coros.append(self._motor.init_io())
         # Wait for pigpiod to initialize everything and create the notify pipe
         await asyncio.gather(*init_coros)
         print("GPIO pins configured - Opening notify pipe")
@@ -75,7 +73,7 @@ class Controller():
         self._last_gpio_bits = GPIO_BITS # all are pulled high to begin
 
     async def cleanup(self):
-        await self._motor.cleanup()
+        self._motor.cleanup()
         await self._the_pi.notify_close(self._pipe_handle)
         await self._the_pi.stop()
   
@@ -188,7 +186,7 @@ class Controller():
         elif self._current_state == State.STOP:
             motor_speed = 0
         print("Current state is {0}. Motor speed will be set to {1}".format(self._current_state, motor_speed))
-        await self._motor.setSpeedPercent(motor_speed)
+        self._motor.setSpeedPercent(motor_speed)
 
     @utils.Debounce(threshold=10, print_status=False)
     def _on_gpio_edge_callback(self, gpio, level, tick):
