@@ -39,7 +39,7 @@ class Motor(object):
 
     def _setRawSpeedAndDir(self, speed, dir):
 
-        print("Opening pigpiod input pipe for writing on {0}".format(PIGPIOD_PIPE_IN))
+        print("Opening pigpiod input pipe for writing motor cmd on {0}: speed={1} dir={2}".format(PIGPIOD_PIPE_IN, speed, dir))
         with open(PIGPIOD_PIPE_IN, mode='wb') as pipe: 
             # Set direction first
             dir_data = "w {0} {1}\n".format(MOTOR_DIR_PIN, dir).encode("latin-1")

@@ -204,7 +204,8 @@ class Controller():
 
     def _on_gpio_edge_event(self, gpio, level, tick):
         action = GPIO_ACTIONS[gpio]
-        print("GPIO edge event occured on pin {0} (action={1}), level is now {2}, tick={3}".format(gpio, action, level, tick))
+        edge_event_type = "RISING" if level == apigpio.HIGH else "FALLING"
+        print("GPIO {4} edge event on pin {0} (action={1}), level is now {2}, tick={3}".format(gpio, action, level, tick, edge_event_type))
         if level == apigpio.HIGH:
             '''
             Rising edge: LOW -> HIGH. Remember pins are PULLED HIGH and go LOW when switches are activated
@@ -213,20 +214,15 @@ class Controller():
             In these cases we must stop/reverse the motor to prevent arms trying to rise/fall to far
             '''
             if action == self._current_state:
-                print("Rising edge LIMIT switch in state {0}".format(self._current_state))
+                print("LIMIT switch for state {0}".format(self._current_state))
                 self.desired_state = State.STOP
-            else:
-                print("Rising edge ignored on pin {0}".format(gpio))
         else:
             '''
             Falling edge: HIGH -> LOW. Remember pins are PULLED HIGH and go LOW when switches are activated
             '''
             if action == self._current_state:
-                print("Falling edge ignored since action {0} matches current state".format(action))
                 return  # Ignore 'noise' of switch for current state activating (again)
-            if action == self._desired_state:
+            elif action == self._desired_state:
                 # Gear has reached correct position for new desired state
-                print("Falling edge action {0} matches desired state".format(action))
+                print("Action {0} matches desired state".format(action))
                 asyncio.create_task(self._on_reached_desired_state())
-            else:
-               print("Falling edge ignored on pin {0}".format(gpio))
