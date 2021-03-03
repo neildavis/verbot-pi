@@ -205,12 +205,12 @@ class Controller():
     def _on_gpio_edge_event(self, gpio, level, tick):
         action = GPIO_ACTIONS[gpio]
         edge_event_type = "RISING" if level == apigpio.HIGH else "FALLING"
-        print("GPIO {4} edge event on pin {0} (action={1}), level is now {2}, tick={3}".format(gpio, action, level, tick, edge_event_type))
+        print("{0} edge event on GPIO #{1}: {2}".format(edge_event_type, gpio, action))
         if level == apigpio.HIGH:
             '''
             Rising edge: LOW -> HIGH. Remember pins are PULLED HIGH and go LOW when switches are activated
             Most rising edges occur as we exit a state and/or interrogation proceeds to the next switch and can be ignored
-            However in the case of PICK_UP/PUT_DOWN they may occur due to the limit switches activating
+            However in the case of PICK_UP/PUT_DOWN they may occur due to the limit switches in series activating
             In these cases we must stop/reverse the motor to prevent arms trying to rise/fall to far
             '''
             if action == self._current_state:
