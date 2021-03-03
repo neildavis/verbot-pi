@@ -44,6 +44,7 @@ class Controller():
         self._motor = drv8835.Motor()
         self._current_state = State.STOP
         self._desired_state = State.STOP
+        self._last_gpio_bits = GPIO_BITS # all are pulled high to begin
 
     async def init_io(self):
         # Connect to pigpiod
@@ -62,17 +63,14 @@ class Controller():
         # Wait for pigpiod to initialize everything and create the notify pipe
         await asyncio.gather(*init_coros)
         print("GPIO pins configured - Opening notify pipe")
-        # Open pipe notifications
-        self._pipe_handle = await self._the_pi.notify_open()
-        if self._pipe_handle == apigpio.PI_NO_HANDLE:
-            print("*ERROR* - notify_begin() pipe_handle={0}".format(self._pipe_handle))
-        else:
-            print("Notify pipe created on /dev/pigpio{0}".format(self._pipe_handle))
-        self._last_gpio_bits = GPIO_BITS # all are pulled high to begin
-
+        asyncio.create_task(self._start_observing_notify_pipe_for_gpio_changes())
+ 
     async def cleanup(self):
+        print("Cleanup: motor")
         self._motor.cleanup()
-        await self._the_pi.notify_close(self._pipe_handle)
+        print("Cleanup: notify pipe")
+        await self._stop_observing_notify_pipe_for_gpio_changes()
+        print("Cleanup: the_pi")
         await self._the_pi.stop()
   
     @property
@@ -111,33 +109,45 @@ class Controller():
         '''
         self._current_state = self._desired_state
         await self._set_motor_speed_for_current_state()
-        if self._current_state == State.PICK_UP or self._current_state == State.PUT_DOWN:
-            asyncio.create_task(self._observe_pipe_for_gpio_changes())  # Watch for LIMIT switches
 
     async def _start_action_interrogation(self):
         self._current_state = State.INTERROGATE
         asyncio.create_task(self._set_motor_speed_for_current_state())
-        await self._observe_pipe_for_gpio_changes()
-
-    async def _observe_pipe_for_gpio_changes(self):
+ 
+    async def _stop_observing_notify_pipe_for_gpio_changes(self):
+        if not None == self._notify_pipe_read_task and not self._notify_pipe_read_task.done():
+            self._notify_pipe_read_task.cancel()
+            await self._notify_pipe_read_task
+        
+    async def _start_observing_notify_pipe_for_gpio_changes(self):
+        # Ask pigpiod to open a pipe to send us notfications
+        print("Request notify pipe open from pigpiod ...")
+        pipe_handle = await self._the_pi.notify_open()
+        if pipe_handle == apigpio.PI_NO_HANDLE:
+            print("*ERROR* - notify_begin() pipe_handle={0}".format(pipe_handle))
+            return
+        print("Notify pipe created on /dev/pigpio{0}".format(pipe_handle))
         # Start observing GPIO via notify pipe - scheduled so we can continue to open and start reading from the pipe before notifcations begin
-        asyncio.create_task(self._the_pi.notify_begin(self._pipe_handle, GPIO_BITS))
+        asyncio.create_task(self._the_pi.notify_begin(pipe_handle, GPIO_BITS))
         # Open the pipe for reading
-        pipe_name = "/dev/pigpio{0}".format(self._pipe_handle)
+        pipe_name = "/dev/pigpio{0}".format(pipe_handle)
         print("Opening notify pipe for reading on {0}".format(pipe_name))
         with open(file=pipe_name, mode='rb', buffering=12) as pipe:
-            print("Pipe opened")
+            print("Notify pipe opened for reading")
             loop = asyncio.get_event_loop()
             pipe_stream_reader = asyncio.StreamReader()
             def protocol_factory():
                 return asyncio.StreamReaderProtocol(pipe_stream_reader)
-            print("Connecting asyncio pipe reader")
             pipe_transport, _ = await loop.connect_read_pipe(protocol_factory, pipe)
-            print("Read pipe connected")
-            state_changed = False
-            while not state_changed:
+            while True:
                 #print("Reading 12 bytes from notify pipe...")
-                pipe_data = await pipe_stream_reader.read(12)
+                self._notify_pipe_read_task = asyncio.create_task(pipe_stream_reader.read(12))
+                await self._notify_pipe_read_task
+                if self._notify_pipe_read_task.cancelled():
+                    print("Notify pipe read was cancelled")
+                    break # Stop observing GPIO changes
+                # else the read completed, grab the data from the task result
+                pipe_data = self._notify_pipe_read_task.result()
                 #print("Got {0} bytes from notify pipe: {1}".format(len(pipe_data), pipe_data))
                 '''
                 Format is:
@@ -156,26 +166,23 @@ class Controller():
                 '''
                 seqno, flags, tick, level = struct.unpack("HHII", pipe_data)
                 if flags & apigpio.NTFY_FLAGS_ALIVE or flags & apigpio.NTFY_FLAGS_WDOG or flags & apigpio.NTFY_FLAGS_EVENT:
-                    print("Pipe notification ignored due to flags")
+                    print("Notify pipe notification ignored due to flags")
                     continue # not interested in these events
                 gpio_changed_bits = level ^ self._last_gpio_bits # a '1' where the state has changed (NOT the new level)
                 # Find all GPIOs we're interested in that have changed
-                msg = ""
                 for gpio in GPIO_ACTIONS.keys():
                     gpio_mask = (1 << gpio)
                     if gpio_changed_bits & gpio_mask:
                         old_level = (self._last_gpio_bits & gpio_mask) >> gpio
                         new_level = (level & gpio_mask) >> gpio
-                        msg += "GPIO #{0} : {1} -> {2}  ".format(gpio, old_level, new_level)
-                        ignored = self._on_gpio_edge_event(gpio, new_level, tick)
-                        state_changed = not ignored
+                        print("Notify: seqno={0} flags={1} tick={2} GPIO #{3} : {4}->{5}".format(seqno, flags, tick, gpio, old_level, new_level))
+                        self._on_gpio_edge_event(gpio, new_level, tick)
                         break
-                print("seqno={0} flags={1} tick={2} level={3} ... {4}".format(seqno, flags, tick, level, msg))
                 self._last_gpio_bits = level
-                if state_changed:
-                    break
             pipe_transport.close()
-
+        print("Notify pipe  closed for reading ... requesting pipe close from pigpiod ...".format(pipe_name))
+        await self._the_pi.notify_close(pipe_handle)
+        print("Notify pipe {0} closed by pigpiod".format(pipe_name))
 
     async def _set_motor_speed_for_current_state(self):
         motor_speed = -100
@@ -194,7 +201,6 @@ class Controller():
     def _on_gpio_edge_event(self, gpio, level, tick):
         action = GPIO_ACTIONS[gpio]
         print("GPIO edge event occured on pin {0} (action={1}), level is now {2}, tick={3}".format(gpio, action, level, tick))
-        ignored = True
         if level == apigpio.HIGH:
             '''
             Rising edge: LOW -> HIGH. Remember pins are PULLED HIGH and go LOW when switches are activated
@@ -205,7 +211,6 @@ class Controller():
             if action == self._current_state:
                 print("Rising edge LIMIT switch in state {0}".format(self._current_state))
                 self.desired_state = State.STOP
-                ignored = False
             else:
                 print("Rising edge ignored on pin {0}".format(gpio))
         else:
@@ -219,7 +224,5 @@ class Controller():
                 # Gear has reached correct position for new desired state
                 print("Falling edge action {0} matches desired state".format(action))
                 asyncio.create_task(self._on_reached_desired_state())
-                ignored = False
             else:
                print("Falling edge ignored on pin {0}".format(gpio))
-        return ignored
