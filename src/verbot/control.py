@@ -32,6 +32,10 @@ GPIO_BITS = 0
 for gpio in GPIO_ACTIONS.keys():
     GPIO_BITS |= (1 << gpio)
 
+MOTOR_SPEED_FOR_INTERROGATION   = 80
+MOTOR_SPEED_FOR_ACTIONS         = -100
+MOTOR_SPEED_STOPPED             = 0
+
 class Controller():
     """
     GPIO controller for Verbot
@@ -185,11 +189,11 @@ class Controller():
         print("Notify pipe {0} closed by pigpiod".format(pipe_name))
 
     async def _set_motor_speed_for_current_state(self):
-        motor_speed = -100
+        motor_speed = MOTOR_SPEED_FOR_ACTIONS
         if self._current_state == State.INTERROGATE:
-            motor_speed = 100
+            motor_speed = MOTOR_SPEED_FOR_INTERROGATION
         elif self._current_state == State.STOP:
-            motor_speed = 0
+            motor_speed = MOTOR_SPEED_STOPPED
         print("Current state is {0}. Motor speed will be set to {1}".format(self._current_state, motor_speed))
         self._motor.setSpeedPercent(motor_speed)
 
