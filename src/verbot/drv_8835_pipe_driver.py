@@ -17,10 +17,10 @@ class Motor(object):
     def init_io(self):
         with open(PIGPIOD_PIPE_IN, mode='wb') as pipe: 
             # Set PWM range
-            pwm_data = "_PI_CMD_PRS {0} {1}\n".format(MOTOR_PWM_PIN, MAX_SPEED).encode("latin-1")
+            pwm_data = "prs {0} {1}\n".format(MOTOR_PWM_PIN, MAX_SPEED).encode("latin-1")
             pipe.write(pwm_data)
             # Set PWM frequency
-            pwm_data = "_PI_CMD_PFS {0} {1}\n".format(MOTOR_PWM_PIN, PWM_FREQUENCY).encode("latin-1")
+            pwm_data = "pfs {0} {1}\n".format(MOTOR_PWM_PIN, PWM_FREQUENCY).encode("latin-1")
             pipe.write(pwm_data)
             
 
@@ -54,5 +54,5 @@ class Motor(object):
             # Set direction first
             dir_data = "w {0} {1}\n".format(MOTOR_DIR_PIN, dir).encode("latin-1")
             pipe.write(dir_data)
-            pwm_data = "_PI_CMD_PWM {0} {1}\n".format(MOTOR_PWM_PIN, int(speed)).encode("latin-1")
+            pwm_data = "pwm {0} {1}\n".format(MOTOR_PWM_PIN, int(speed)).encode("latin-1")
             pipe.write(pwm_data)
