@@ -1,11 +1,11 @@
 # Motor speeds for this module are specified as numbers
 # between -MAX_SPEED and MAX_SPEED, inclusive.
-MAX_SPEED = 1000000
+MAX_SPEED = 255
 
 # Default GPIO pin assignments (using M2 port of Pololu 8835 module)
 MOTOR_PWM_PIN = 13
 MOTOR_DIR_PIN = 6
-# Default PWM frequency - Since pigpio uses hardware PWM we can go very high
+# Default PWM frequency - Note pigpio will match nearest based on sample rate
 PWM_FREQUENCY=250000 # 250 KHz is the max PWM supported by the 8835!
 
 PIGPIOD_PIPE_IN = "/dev/pigpio"
@@ -13,6 +13,16 @@ PIGPIOD_PIPE_OUT = "/dev/pigout"
 PIGPIOD_PIPE_ERR = "/dev/pigerr"
 
 class Motor(object):
+
+    def init_io(self):
+        with open(PIGPIOD_PIPE_IN, mode='wb') as pipe: 
+            # Set PWM range
+            pwm_data = "_PI_CMD_PRS {0} {1}\n".format(MOTOR_PWM_PIN, MAX_SPEED).encode("latin-1")
+            pipe.write(pwm_data)
+            # Set PWM frequency
+            pwm_data = "_PI_CMD_PFS {0} {1}\n".format(MOTOR_PWM_PIN, PWM_FREQUENCY).encode("latin-1")
+            pipe.write(pwm_data)
+            
 
     def cleanup(self):
         self._setRawSpeedAndDir(0, 0)
@@ -44,6 +54,5 @@ class Motor(object):
             # Set direction first
             dir_data = "w {0} {1}\n".format(MOTOR_DIR_PIN, dir).encode("latin-1")
             pipe.write(dir_data)
-            # Set speed via hardware PWM
-            pwm_data = "hp {0} {1} {2}\n".format(MOTOR_PWM_PIN, PWM_FREQUENCY, speed).encode("latin-1")
+            pwm_data = "_PI_CMD_PWM {0} {1}\n".format(MOTOR_PWM_PIN, int(speed)).encode("latin-1")
             pipe.write(pwm_data)

@@ -19,7 +19,7 @@ class State(Enum):
 
 GPIO_ACTIONS = {
     22  : State.STOP,           # Purple
-    24  : State.ROTATE_RIGHT,   # Red
+    26  : State.ROTATE_RIGHT,   # Red
     10  : State.ROTATE_LEFT,    # Yellow
     9   : State.FORWARDS,       # Grey
     25  : State.REVERSE,        # Blue
@@ -66,6 +66,7 @@ class Controller():
         ))
         # Wait for pigpiod to initialize everything and create the notify pipe
         await asyncio.gather(*init_coros)
+        self._motor.init_io()
         print("GPIO pins configured - Opening notify pipe")
         asyncio.create_task(self._start_observing_notify_pipe_for_gpio_changes())
  
