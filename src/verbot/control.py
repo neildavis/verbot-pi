@@ -111,7 +111,7 @@ class Controller():
         # ... and wait for falling edge callbacks in self._on_gpio_edge_event
 
     async def _set_motor_speed_for_current_state(self):
-        motor_speed = 0 # No actions for now until we debug interrogate debounce
+        motor_speed = MOTOR_SPEED_FOR_ACTIONS
         if self._current_state == State.INTERROGATE:
             motor_speed = MOTOR_SPEED_FOR_INTERROGATION
         elif self._current_state == State.STOP:
