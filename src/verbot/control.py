@@ -3,7 +3,6 @@ import asyncio
 import itertools
 import apigpio
 import verbot.drv_8835_driver as drv8835
-import verbot.utils as utils
 
 
 class State(Enum):
@@ -19,15 +18,19 @@ class State(Enum):
     TALK            = 8
 
 GPIO_ACTIONS = {
-    22  : State.STOP,
-    24  : State.ROTATE_RIGHT,
-    10  : State.ROTATE_LEFT,
-    9   : State.FORWARDS,
-    25  : State.REVERSE,
-    11  : State.PUT_DOWN,
-    8   : State.PICK_UP,
-    7   : State.TALK
+    22  : State.STOP,           # Purple
+    26  : State.ROTATE_RIGHT,   # Red
+    10  : State.ROTATE_LEFT,    # Yellow
+    9   : State.FORWARDS,       # Grey
+    25  : State.REVERSE,        # Blue
+    11  : State.PUT_DOWN,       # Brown
+    8   : State.PICK_UP,        # Orange
+    7   : State.TALK            # Blue
 }
+
+MOTOR_SPEED_FOR_INTERROGATION   = 40
+MOTOR_SPEED_FOR_ACTIONS         = -100
+MOTOR_SPEED_STOPPED             = 0
 
 class Controller():
     """
@@ -44,9 +47,9 @@ class Controller():
 
     async def init_io(self):
         # Connect to pigpiod
-        print("Connecting to pigpiod on {0}:{1} ...\n".format(self._address[0], self._address[1]))
+        print("Connecting to pigpiod on {0}:{1} ...".format(self._address[0], self._address[1]))
         await self._the_pi.connect(self._address)
-        print("Connected to pigpiod - Configuring GPIO pins ...\n")
+        print("Connected to pigpiod - Configuring GPIO pins ...")
         # Set all GPIO pins for actions to input and pull up, and register callbacks for edge events
         init_coros = list(itertools.chain.from_iterable(
             (
@@ -59,7 +62,7 @@ class Controller():
         # Initialize the motor driver GPIO output pins
         init_coros.append(self._motor.init_io())
         await asyncio.gather(*init_coros)
-        print("GPIO pins configured\n")
+        print("GPIO pins configured")
 
     async def cleanup(self):
         await self._motor.setSpeedPercent(0)
@@ -79,10 +82,10 @@ class Controller():
     def desired_state(self, state: State) -> None:
         """Request a new desired state"""
         if state == self._current_state: # Already in desired state
-            print("Request for new desired state {0} matches current state - ignored\n".format(state))
+            print("Request for new desired state {0} matches current state - ignored".format(state))
             return; 
         self._desired_state = state
-        print("New desired state: {0}\n".format(self._desired_state))
+        print("New desired state: {0}".format(self._desired_state))
         asyncio.create_task(self._on_new_desired_state())
 
     async def _on_new_desired_state(self):
@@ -110,41 +113,38 @@ class Controller():
     async def _set_motor_speed_for_current_state(self):
         motor_speed = 0 # No actions for now until we debug interrogate debounce
         if self._current_state == State.INTERROGATE:
-            motor_speed = 100
+            motor_speed = MOTOR_SPEED_FOR_INTERROGATION
         elif self._current_state == State.STOP:
-            motor_speed = 0
-        print("Current state is {0}. Motor speed will be set to {1}\n".format(self._current_state, motor_speed))
+            motor_speed = MOTOR_SPEED_STOPPED
+        print("Current state is {0}. Motor speed will be set to {1}".format(self._current_state, motor_speed))
         await self._motor.setSpeedPercent(motor_speed)
 
-    @utils.Debounce(threshold=10, print_status=False)
     def _on_gpio_edge_event(self, gpio, level, tick):
         if level == apigpio.TIMEOUT:
             return # No change, just a watchdog event
 
         action = GPIO_ACTIONS[gpio]
-        print("GPIO edge event occured on pin {0} (action={1}), level is now {2}, tick={3}\n".format(gpio, action, level, tick))
+        edge_event_type = "RISING" if level == apigpio.HIGH else "FALLING"
+        print("EVENT (tick={4}): {0} edge event on GPIO #{1} ({2}), level={3}".format(edge_event_type, gpio, action, level, tick))
         if level == apigpio.HIGH:
             '''
             Rising edge: LOW -> HIGH. Remember pins are PULLED HIGH and go LOW when switches are activated
             Most rising edges occur as we exit a state and/or interrogation proceeds to the next switch and can be ignored
-            However in the case of PICK_UP/PUT_DOWN they may occur due to the limit switches activating
+            However in the case of PICK_UP/PUT_DOWN they may occur due to the limit switches in series activating
             In these cases we must stop/reverse the motor to prevent arms trying to rise/fall to far
             '''
             if action == self._current_state:
-                print("Rising edge for limit switch in state {0}\n".format(self._current_state))
+                print("LIMIT switch for state {0}".format(self._current_state))
                 self.desired_state = State.STOP
-            else:
-                print("Rising edge ignored on pin {0}\n".format(gpio))
         else:
             '''
             Falling edge: HIGH -> LOW. Remember pins are PULLED HIGH and go LOW when switches are activated
             '''
             if action == self._current_state:
-                print("Falling edge ignored since action {0} matches current state\n".format(action))
                 return  # Ignore 'noise' of switch for current state activating (again)
             if action == self._desired_state:
                 # Gear has reached correct position for new desired state
-                print("Falling edge action {0} matches desired state\n".format(action))
+                print("Action {0} matches desired state".format(action))
                 asyncio.create_task(self._on_reached_desired_state())
             else:
-               print("Falling edge ignored on pin {0}\n".format(gpio))
+               print("Falling edge ignored on pin {0}".format(gpio))
