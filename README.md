@@ -63,53 +63,48 @@ The following table lists the 9 coloured wires in the ribbon cable connecting th
 
 ## GPIO Pin Assignments
 
- | GPIO Pin (BCM) | Physical Pin | Reserved by | Function |
- |----------------|--------------|-------------|----------|
-+|  -             |   1          | Power | 3.3V |
-+|  -             |   2          | Power | 5V |
- |  2             |   3          | I2C1 | I2C Data |
-+|  -             |   4          | Power | 5V |
- |  3             |   5          | I2C1 | I2C Clock |
--|  4             |   7          | | |
-+|  -             |   6          | Power | GND |
-+|  4             |   7          | On/Off Shim | Shutdown |
- | 14             |   8          | Voice Hat | UART TX |
-+|  -             |   9          | Power | GND |
- | 15             |  10          | Voice Hat | UART RX |
- | 17             |  11          | On/Off Shim | Power Button |
- | 18             |  12          | Voice Hat | PCM Clock |
--| 27             |  13          | | |
-+| 27             |  13          | On/Off Shim | LED |
-+|  -             |  14          | Power | GND |
- | 22             |  15          | **Verbot** | SW Stop |
--| 23             |  16          | Voice Hat | ??? |
--| 24             |  18          | **Verbot** | SW Rotate Right |
-+| 23             |  16          | Voice Hat | Button |
-+|  -             |  17          | Power | 3.3V |
-+| 24             |  18          | - | - |
- | 10             |  19          | **Verbot** | SW Rotate Left |
-+|  -             |  20          | Power | GND |
- |  9             |  21          | **Verbot** | SW Forwards |
- | 25             |  22          | **Verbot** | SW Reverse|
- | 11             |  23          | **Verbot** | SW Put Down |
- |  8             |  24          | **Verbot** | SW Pick Up |
-+|  -             |  25          | Power | GND |
- |  7             |  26          | **Verbot** | SW Talk |
- |  0             |  27          | I2C0 | EEPROM Data |
- |  1             |  28          | I2C0 | EEPROM Clock |
- |  5             |  29          | DRV8835 | Motor 1 Dir |
-+|  -             |  30          | Power | GND |
- |  6             |  31          | DRV8835 | Motor 2 Dir |
- | 12             |  32          | DRV8835 | Motor 1 PWM |
- | 13             |  33          | DRV8835 | Motor 2 PWM |
-+|  -             |  34          | Power | GND |
- | 19             |  35          | Voice Hat | PCM FS |
--| 16             |  36          | | |
--| 26             |  37          | | |
-+| 16             |  36          | **Verbot** | AIY Button |
-+| 26             |  37          | **Verbot** | SW Rotate Right |
- | 20             |  38          | Voice Hat | PCM In |
-+|  -             |  39          | Power | GND |
- | 21             |  40          | Voice Hat | PCM Out |
-+|||||
+| GPIO Pin (BCM) | Physical Pin | Reserved by | Function |
+|----------------|--------------|-------------|----------|
+|  -             |   1          | Power | 3.3V |
+|  -             |   2          | Power | 5V |
+|  2             |   3          | I2C1 | I2C Data |
+|  -             |   4          | Power | 5V |
+|  3             |   5          | I2C1 | I2C Clock |
+|  4             |   7          | | |
+|  -             |   6          | Power | GND |
+|  4             |   7          | On/Off Shim | Shutdown |
+| 14             |   8          | Voice Hat | UART TX |
+|  -             |   9          | Power | GND |
+| 15             |  10          | Voice Hat | UART RX |
+| 17             |  11          | On/Off Shim | Power Button |
+| 18             |  12          | Voice Hat | PCM Clock |
+| 27             |  13          | On/Off Shim | LED |
+|  -             |  14          | Power | GND |
+| 22             |  15          | **Verbot** | SW Stop |
+| 23             |  16          | Voice Hat | ??? |
+|  -             |  17          | Power | 3.3V |
+| 24             |  18          | - | - |
+| 10             |  19          | **Verbot** | SW Rotate Left |
+|  -             |  20          | Power | GND |
+|  9             |  21          | **Verbot** | SW Forwards |
+| 25             |  22          | **Verbot** | SW Reverse|
+| 11             |  23          | **Verbot** | SW Put Down |
+|  8             |  24          | **Verbot** | SW Pick Up |
+|  -             |  25          | Power | GND |
+|  7             |  26          | **Verbot** | SW Talk |
+|  0             |  27          | I2C0 | EEPROM Data |
+|  1             |  28          | I2C0 | EEPROM Clock |
+|  5             |  29          | DRV8835 | Motor 1 Dir |
+|  -             |  30          | Power | GND |
+|  6             |  31          | DRV8835 | Motor 2 Dir |
+| 12             |  32          | DRV8835 | Motor 1 PWM |
+| 13             |  33          | DRV8835 | Motor 2 PWM |
+|  -             |  34          | Power | GND |
+| 19             |  35          | Voice Hat | PCM FS |
+| 16             |  36          | **Verbot** | AIY Button |
+| 26             |  37          | **Verbot** | SW Rotate Right |
+| 20             |  38          | Voice Hat | PCM In |
+|  -             |  39          | Power | GND |
+| 21             |  40          | Voice Hat | PCM Out |
+|||||
 

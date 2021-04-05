@@ -51,7 +51,8 @@ async def verbot_action(server, action):
         "rotate_right"  : State.ROTATE_RIGHT,
         "pick_up"       : State.PICK_UP,
         "put_down"      : State.PUT_DOWN,
-        "talk"          : State.TALK
+        "talk"          : State.TALK,
+        "assistant"     : State.ASSISTANT
     }
     new_state = ACTIONS_STATES.get(action)
     if not new_state == None:

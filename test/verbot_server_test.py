@@ -3,6 +3,8 @@ from jsonrpcclient import request
 HOST="127.0.0.1:8080"
 
 VALID_ACTIONS={
+    "a" : "assistant",
+    "assistant" : "assistant",
     "s" : "stop",
     "stop" : "stop",
     "f" : "forwards",
