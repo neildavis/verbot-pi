@@ -1,0 +1,9 @@
+[Unit]
+Description=A service to control a Tomy Verbot with a Raspberry Pi
+
+[Service]
+ExecStart=%h/code/verbot-pi/env/bin/python %h/code/verbot-pi/src/verbot_pi.python
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target
