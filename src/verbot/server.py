@@ -1,11 +1,14 @@
 import asyncio
+import socket
 from aiohttp import web
 from jsonrpcserver import method as json_rpc_method, async_dispatch
+from zeroconf import IPVersion, ServiceInfo, Zeroconf
+from verbot.utils import getNetworkIp
 from verbot.control import State, Controller as Verbot
 
 class Server:
 
-    def __init__(self, bind_addr="127.0.0.1", listen_port=8080, pigpiod_addr="127.0.0.1", pigpiod_port=8888):
+    def __init__(self, bind_addr=None, listen_port=8080, pigpiod_addr="127.0.0.1", pigpiod_port=8888):
         self._app = web.Application()
         self._bind_addr = bind_addr
         self._listen_port = listen_port
@@ -23,11 +26,26 @@ class Server:
         # Set a signal handler to get a chance to shutdown gracefully
         self._app.on_shutdown.append(self._on_shutdown)
         try:
+            info = ServiceInfo(
+                    "_verbot._tcp.local.",
+                    "Verbot Control Server._verbot._tcp.local.",
+                    addresses=[socket.inet_aton(self._bind_addr)] if not self._bind_addr == None else None,
+                    port=self._listen_port,
+                    properties={
+                        'path' : '/verbot_control/'
+                    },
+                    server=getNetworkIp(),
+                )
+
+            zeroconf = Zeroconf(ip_version=IPVersion.V4Only)
+            print("Registration of a service, press Ctrl-C to exit...")
+            zeroconf.register_service(info)
             web.run_app(self._app, host=self._bind_addr, port=self._listen_port)
             # web.run_app() runs the event loop indefinitely
-        except:
-            self._verbot.cleanup()
-
+        finally:
+            zeroconf.unregister_all_services()
+            zeroconf.close()
+ 
     async def _handle_json_rpc_request(self, request):
         request = await request.text()
         # Because jsonrpcserver doesnt support instance methods as @json_rpc_method

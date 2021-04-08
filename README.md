@@ -5,7 +5,7 @@ A Python program and library to control a Tomy Verbot using a Raspberry Pi. Requ
 ## Required Libraries
 
 ```bash
-pip install requests aiohttp jsonrpcserver jsonrpcclient
+pip install requests aiohttp jsonrpcserver jsonrpcclient zeroconf google-assistant-library google-auth-oauthlib 
 ```
 
 You will also need my fork of [apigpio](https://github.com/neildavis/apigpio.git) (not yet on PyPI)
@@ -107,4 +107,3 @@ The following table lists the 9 coloured wires in the ribbon cable connecting th
 |  -             |  39          | Power | GND |
 | 21             |  40          | Voice Hat | PCM Out |
 |||||
-
