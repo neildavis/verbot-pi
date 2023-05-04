@@ -1,8 +1,42 @@
 # verbot-pi
 
-A Python program and library to control a Tomy Verbot using a Raspberry Pi. Requires Python 3.7+
+A Python (3.7+) program and library to control a 1980s era [Tomy Verbot](https://www.theoldrobots.com/verbot.html) toy robot using a Raspberry Pi, with the addition of AI smart speaker style 'voice assistant' features.
 
-## Required Libraries
+## Background
+
+The idea was to replace the 80s era electronics in the Tomy Verbot with modern technology with the aim that we can benefit in two ways:
+
+1. The Google AIY voice assistant would recognize our spoken requests with much greater accuracy than the notoriously poor 1980s era system.
+2. Gain 'smart-speaker' style AI assistant features at the same time.
+
+The intent was to retain all of the other existing mechanical operation parts from the original toy, instead of replacing these with servos, stepper motors etc which would have been a much greater and more expensive project!
+
+## Features
+
+* JSON-RPC server supporting requests over HTTP
+* Voice commands supported via [Google AIY Voice Kit 2.0](https://aiyprojects.withgoogle.com/voice/)
+* Google Assistant enabled
+
+## Hardware Setup
+
+This project makes use of:
+
+* An original [Tomy Verbot](https://www.theoldrobots.com/verbot.html) toy with functioning motor & gears.
+* A [Raspberry Pi Zero W](https://www.raspberrypi.com/products/raspberry-pi-zero-w/). The newer [Pi Zero 2 W](https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/) would be a worthwhile upgrade but has not been tested.
+* The 'Voice Bonnnet' and LED button from the [Google AIY Voice Kit 2.0](https://aiyprojects.withgoogle.com/voice/) Note: the complete kit also includes a Pi Zero W
+* A [Pololu DRV8835 Dual Motor Driver Kit for Raspberry Pi](https://www.pololu.com/product/2753)
+* A [GeeekPi Raspberry Pi GPIO Expansion Board](https://smile.amazon.co.uk/gp/product/B08C4P66HV/)
+* Some (very small) [speakers](https://www.amazon.co.uk/sourcing-map-Replacement-Loudspeaker-20mmx30mm/dp/B07LGH4L4J)
+* A [Pimoroni OnOff SHIM](https://shop.pimoroni.com/products/onoff-shim) (or similar smart power off solution for the Pi)
+* (Optional) a 5V rechargable power source. (e.g. [a USB power bank](https://www.amazon.co.uk/%E3%80%902-Pack%E3%80%91-Miady-Portable-High-Speed-Compatible/dp/B08T1JCXR5?th=1) or similar)
+
+## Software Setup
+
+This project was developed using [Raspberry Pi OS v10](https://en.wikipedia.org/wiki/Raspberry_Pi_OS) which is based on Debian Linux 10 (aka 'Buster') My exact Kernel version is 5.4.51
+
+### Required Libraries
+
+This project requires Python 3.7+ It's recommended that you create and activate a separate [virtual environment (venv)](https://docs.python.org/3/tutorial/venv.html) for the project.
 
 ```bash
 pip install requests aiohttp jsonrpcserver jsonrpcclient zeroconf google-assistant-library google-auth-oauthlib 
@@ -16,11 +50,21 @@ cd apigpio
 python -m pip install .
 ```
 
-## Verbot Mechanical Operation
+## Technical Information
 
 The following information has been compiled by a combination of reverse engineering and information contained within [Tomy's patent application](https://patents.google.com/patent/US4717364A/en)
 
-Verbot is controlled by a single bi-deirectional 3V DC motor and a complex set of gears. The direction of the motor is set by the DC voltage polarity. Depending on the direction of the motor, Verbot is operating in one of two mutually exclusive modes:
+### Power Supply
+
+The 3V DC to driver the motor is supplied on the __orange +ve__ wire and __black ground__ wire from the 2x 1.5V 'C' battery compartment. This was fed from the control board to allow polarty reversing. Our Pololu DRV8835 will serve the same purpose.
+
+The 4x 1.5V 'AA' batteries fed 6V DC to the main electronics control board via the __red +ve__ and __black ground__ wires. I did away with this board and power supply, replacing it with a 5V DC supply from the USB Power Bank battery which will power the Raspberry Pi Zero.
+
+Both the 3V & 5V DC supplies are (+ve line) switched by the board behind the front keypad panel (with the eight red 'action' buttons), with the red 5V DC supply also feeding the red power LED in the bottom right corner of the control panel.
+
+### Electo-mechanical operation
+
+Verbot is controlled by a single bi-deirectional 3V DC motor powered from the 2x 1.5V 'C' size batteries, and an intricate set of gears. The direction of the motor is set by the DC voltage polarity. Depending on the direction of the motor, Verbot is operating in one of two mutually exclusive modes:
 
 | Polarity | Motor Direction | Operating Mode |
 |----------|-----------------|----------------|
@@ -28,7 +72,7 @@ Verbot is controlled by a single bi-deirectional 3V DC motor and a complex set o
 | Reverse  | Clockwise       | Action         |
 |||
 
-### 1. Interrogation mode
+#### 1. Interrogation mode
 
 During interrogation mode, Verbot is not performing any movement or other actions. It is the default mode upon powering on.
 
@@ -36,15 +80,15 @@ The motor rotating continuously in an anti-clockwise direction drives a drum wit
 
 By wiring the switches to complete a circuit their state can be determined by an attached micro-controlller, or in our case a Raspberry Pi through its GPIO interface.
 
-### 2. Action mode
+#### 2. Action mode
 
-Verbot enters action mode when the direction of the motor is reversed. A simple clutch mechanism ensures the drum stops rotating and the last switch selected during interrogation mode stays selected. Now the clutch mechanism starts to rotate a shaft within the drum which connects to various planetary gear sets. The set of gears at the selected location when the drum stopped rotating work to perform the associated action. This action will continue until the motor is again reversed to re-enter interrogation mode. Some actions such as the arms have movement limits enforced by limit switches in series which will break the interrogation circuit, and this prompts the controller to automatically reverse the motor to re-enter interrogation mode.
+Verbot enters action mode when the direction of the motor is reversed. A simple clutch mechanism ensures the drum stops rotating and the last switch selected during interrogation mode stays selected. Now the clutch mechanism starts to rotate a shaft within the drum which connects to various planetary gear sets. The set of gears at the selected location when the drum stopped rotating work to perform the associated action. This action will continue until the motor is again reversed to re-enter interrogation mode. Some actions such as the arms have movement limits enforced by limit switches in series which will break the action circuit, and this prompts the controller to automatically reverse the motor to re-enter interrogation mode.
 
-### 3. Putting it together
+#### 3. Putting it together
 
 To perform a desired action it's important to allow the drum to rotate during interrogation mode until the corresponding switch has been activated to complete the circuit, before reversing the motor to perform the action. This ensures the correct set of planetary gears connected to the shaft are operational and placed in the correct position to perform the desired action.
 
-### 4. Switching Key
+#### 4. Switching Key
 
 The following table lists the 9 coloured wires in the ribbon cable connecting the controller board to the interrogation switch bank contained within the gearbox & motor housing, and their corresponding actions.
 
@@ -62,6 +106,9 @@ The following table lists the 9 coloured wires in the ribbon cable connecting th
 ||||
 
 ## GPIO Pin Assignments
+
+This table lists all of the GPIO pin assignments as setup by the software. Some of these are reserved by e.g. the Voice Bonnet & Google's software.
+The 'digital input' pins relating to the 'actions' as described in the section above are highlighted in bold as **Verbot**.
 
 | GPIO Pin (BCM) | Physical Pin | Reserved by | Function |
 |----------------|--------------|-------------|----------|
@@ -101,7 +148,7 @@ The following table lists the 9 coloured wires in the ribbon cable connecting th
 | 13             |  33          | DRV8835 | Motor 2 PWM |
 |  -             |  34          | Power | GND |
 | 19             |  35          | Voice Hat | PCM FS |
-| 16             |  36          | **Verbot** | AIY Button |
+| 16             |  36          | AIY | AIY activation Button |
 | 26             |  37          | **Verbot** | SW Rotate Right |
 | 20             |  38          | Voice Hat | PCM In |
 |  -             |  39          | Power | GND |
